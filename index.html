@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#6757e8"><title>انتخابینو | چرخ انتخاب</title>
+<style>
+:root{--bg:#f4f3ff;--card:#fff;--ink:#242044;--muted:#77748f;--accent:#6757e8;--accent2:#9b6cff;--line:#e9e6ff;--shadow:0 14px 40px #392b8918}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:radial-gradient(circle at top,#e6e1ff 0,#f7f6ff 45%,#f4f3ff 100%);color:var(--ink);min-height:100vh}
+header{padding:24px 18px 8px;text-align:center}h1{margin:0;font-size:clamp(27px,6vw,38px);letter-spacing:-1px}h1 span{color:var(--accent)}header p{margin:8px 0;color:var(--muted);font-size:14px}
+main{width:min(1050px,100%);margin:auto;padding:14px 14px 35px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:16px}
+.card{background:var(--card);border:1px solid #fff;border-radius:24px;box-shadow:var(--shadow);padding:18px}
+.wheel-card{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}
+.wheel-wrap{position:relative;width:min(100%,430px);aspect-ratio:1;margin:4px auto 12px}
+canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 8px 13px #3a2b7c22)}
+.pointer{position:absolute;z-index:2;top:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:19px solid transparent;border-right:19px solid transparent;border-top:35px solid #29224f;filter:drop-shadow(0 3px 2px #0002)}
+.spin{border:0;border-radius:16px;padding:15px 35px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font:700 18px Tahoma;box-shadow:0 8px 20px #6757e844;cursor:pointer;min-width:190px}
+.spin:disabled{opacity:.6;cursor:wait}.hint{font-size:12px;color:var(--muted);margin:12px 0 0;text-align:center}
+.result{margin-top:12px;width:100%;border-radius:16px;background:#f2efff;padding:13px;text-align:center;min-height:58px;font-weight:bold;color:var(--accent);font-size:18px}
+.side{display:flex;flex-direction:column;gap:14px}.section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.section-title h2{font-size:18px;margin:0}
+textarea{width:100%;min-height:155px;resize:vertical;border:1.5px solid var(--line);border-radius:15px;padding:13px;background:#fcfbff;color:var(--ink);font:15px/1.9 Tahoma;outline:none}
+textarea:focus{border-color:#b9afff}.small{font-size:12px;color:var(--muted);line-height:1.8}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:11px 14px;font:700 13px Tahoma;cursor:pointer}.primary{background:var(--accent);color:white}.soft{background:#f0edff;color:var(--accent)}.danger{background:#fff0f3;color:#c34262}
+.history{display:flex;flex-direction:column;gap:8px}.history-item{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#faf9ff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}.history-item small{color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:0 15px 20px}
+@media(max-width:760px){main{grid-template-columns:1fr;padding:10px}.card{padding:15px}.wheel-wrap{width:min(100%,390px)}header{padding-top:20px}}
+</style></head>
+<body>
+<header><h1>🎯 <span>انتخابینو</span></h1><p>وقتی انتخاب سخته، بذار چرخ تصمیم بگیره!</p></header>
+<main>
+<section class="card wheel-card">
+<div class="wheel-wrap"><div class="pointer"></div><canvas id="wheel" width="900" height="900" aria-label="چرخ انتخاب"></canvas></div>
+<button class="spin" id="spin">بچرخون! 🎲</button><div class="result" id="result" aria-live="polite">یه گزینه اضافه کن و چرخ رو بچرخون!</div><p class="hint">هر بار چرخ رو بچرخونی، یکی از گزینه‌ها به‌صورت تصادفی انتخاب می‌شه.</p>
+</section>
+<div class="side">
+<section class="card"><div class="section-title"><h2>📝 گزینه‌ها</h2><span class="small" id="count">۸ گزینه</span></div>
+<textarea id="items" aria-label="گزینه‌ها" spellcheck="false">پیتزا
+همبرگر
+ساندویچ
+ماکارونی
+سالاد
+سوپ
+کباب
+غذای خونگی</textarea>
+<p class="small">هر گزینه رو در یک خط بنویس. حداقل دو گزینه لازمه.</p>
+<div class="row"><button class="btn primary" id="apply">اعمال گزینه‌ها</button><button class="btn soft" id="sample">گزینه‌های نمونه</button></div></section>
+<section class="card"><div class="section-title"><h2>🏆 انتخاب‌های قبلی</h2><button class="btn soft" id="clear">پاک کردن</button></div><div class="history" id="history"><p class="small">هنوز انتخابی انجام نشده.</p></div></section>
+<section class="card"><div class="section-title"><h2>✨ نکته</h2></div><p class="small">گزینه‌ها و سابقه روی همین دستگاه ذخیره می‌شن. برای انتخاب دوباره، دکمه «بچرخون!» رو بزن.</p></section>
+</div></main><footer>انتخابینو · ساده، سریع و سرگرم‌کننده 💜</footer>
+<script>
+(()=>{const canvas=document.getElementById('wheel'),ctx=canvas.getContext('2d'),input=document.getElementById('items'),spinBtn=document.getElementById('spin'),result=document.getElementById('result'),count=document.getElementById('count'),historyBox=document.getElementById('history');
+const colors=['#7868ef','#ffb84d','#f36e9b','#41c8b2','#5ba9f5','#b17af4','#ff8769','#62c58a','#edcf56','#5f75dc'];
+let options=[],angle=0,busy=false,history=[];
+try{options=JSON.parse(localStorage.getItem('entekhabino_options')||'null')||input.value.split('\n');history=JSON.parse(localStorage.getItem('entekhabino_history')||'[]')}catch(e){options=input.value.split('\n')}
+function save(){try{localStorage.setItem('entekhabino_options',JSON.stringify(options));localStorage.setItem('entekhabino_history',JSON.stringify(history))}catch(e){}}
+function draw(){const n=options.length,cx=450,cy=450,r=420;ctx.clearRect(0,0,900,900);if(!n){ctx.fillStyle='#eeeaff';ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#6b5be7';ctx.font='bold 36px Tahoma';ctx.textAlign='center';ctx.fillText('گزینه اضافه کن',cx,cy);return}
+const slice=Math.PI*2/n;for(let i=0;i<n;i++){const start=angle+i*slice-Math.PI/2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,start+slice);ctx.closePath();ctx.fillStyle=colors[i%colors.length];ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=7;ctx.stroke();ctx.save();ctx.translate(cx,cy);ctx.rotate(start+slice/2);ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.shadowColor='#0003';ctx.shadowBlur=3;let text=options[i];ctx.font='bold '+(n>12?25:n>8?30:36)+'px Tahoma';if(text.length>17)text=text.slice(0,16)+'…';ctx.fillText(text,r-35,0);ctx.restore()}
+ctx.beginPath();ctx.arc(cx,cy,76,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=9;ctx.strokeStyle='#29224f';ctx.stroke();ctx.fillStyle='#6757e8';ctx.font='bold 37px Tahoma';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('انتخاب',cx,cy)}
+function renderHistory(){historyBox.innerHTML='';if(!history.length){historyBox.innerHTML='<p class="small">هنوز انتخابی انجام نشده.</p>';return}history.slice(0,6).forEach((x,i)=>{const el=document.createElement('div');el.className='history-item';el.innerHTML='<span>⭐ '+escapeHtml(x.name)+'</span><small>'+escapeHtml(x.time)+'</small>';historyBox.appendChild(el)})}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function apply(){const next=input.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(next.length<2){result.textContent='حداقل دو گزینه بنویس!';return}options=next.slice(0,100);input.value=options.join('\n');count.textContent=options.length+' گزینه';result.textContent='آماده‌ای؟ چرخ رو بچرخون!';save();draw()}
+spinBtn.addEventListener('click',()=>{if(busy)return;applyQuiet();if(options.length<2){result.textContent='حداقل دو گزینه لازم داری.';return}busy=true;spinBtn.disabled=true;result.textContent='چرخ داره می‌چرخه…';const n=options.length,slice=2*Math.PI/n;const chosen=Math.floor(Math.random()*n);const current=((angle%(2*Math.PI))+2*Math.PI)%(2*Math.PI);const targetMod=((-(chosen+.5)*slice+Math.PI/2)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);const delta=(targetMod-current+2*Math.PI)%(2*Math.PI);const start=angle,total=delta+Math.PI*2*(5+Math.floor(Math.random()*3)),duration=4300+Math.random()*700,t0=performance.now();function frame(now){let t=Math.min(1,(now-t0)/duration),ease=1-Math.pow(1-t,4);angle=start+total*ease;draw();if(t<1)requestAnimationFrame(frame);else{angle=targetMod;draw();busy=false;spinBtn.disabled=false;const name=options[chosen];result.textContent='🎉 انتخاب شد: '+name;history.unshift({name,time:new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})});history=history.slice(0,20);save();renderHistory()}}requestAnimationFrame(frame)});
+function applyQuiet(){const next=input.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(next.length>=2)options=next.slice(0,100)}
+document.getElementById('apply').addEventListener('click',apply);document.getElementById('sample').addEventListener('click',()=>{input.value='درس خوندن\nبازی کردن\nفیلم دیدن\nپیاده‌روی\nکتاب خوندن\nاستراحت';apply()});document.getElementById('clear').addEventListener('click',()=>{history=[];save();renderHistory()});input.addEventListener('input',()=>{count.textContent=input.value.split(/\r?\n/).filter(x=>x.trim()).length+' گزینه'});if(options.length<2)options=['گزینه اول','گزینه دوم'];input.value=options.join('\n');count.textContent=options.length+' گزینه';draw();renderHistory();save()
+})();
+</script></body></html>
